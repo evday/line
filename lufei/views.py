@@ -43,6 +43,27 @@ class AuthView(APIView):
 
 class ShoppingCarView(AuthApiView,APIView):
 
+
+    def get(self,request,*args,**kwargs):
+        """
+        查看购物车
+        :param request:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        response = {"code":1000,"data":None}
+        try:
+            course = CONN.hget(settings.LUFFY_SHOPPING_CAR,request.user.id)
+            if course:
+                course_dict = json.loads(course.decode('utf-8'))
+                response["data"] = course_dict
+        except Exception as e:
+            response["code"] = 1001
+            response["msg"] = "获取购物车列表失败"
+        return Response(response)
+
+
     def post(self,request,*args,**kwargs):
         """
         获取课程ID和价格策略ID，放入redis
@@ -55,8 +76,6 @@ class ShoppingCarView(AuthApiView,APIView):
         try:
             course_id = request.data.get('course_id')
             price_policy_id = request.data.get('price_policy_id')
-
-            print(course_id,price_policy_id)
 
             # 获取课程
             course_obj = models.Course.objects.get(id=course_id)
@@ -89,7 +108,6 @@ class ShoppingCarView(AuthApiView,APIView):
             # a 获取当前用户购物车中的课程
             # b car["course_obj.id"] = course_dict
             # c conn.hset("luffy_shopping_car",request.user.id,car)
-            print('--------------------')
             nothing = CONN.hget(settings.LUFFY_SHOPPING_CAR,request.user.id)
             if not nothing:
                 data = {course_obj.id:course_dict}
@@ -99,7 +117,6 @@ class ShoppingCarView(AuthApiView,APIView):
                 data[course_obj.id] = course_dict
 
             CONN.hset(settings.LUFFY_SHOPPING_CAR,request.user.id,json.dumps(data))
-
         except ObjectDoesNotExist as e:
             ret["code"] = 1001
             ret["msg"] = "课程不存在"
@@ -115,6 +132,72 @@ class ShoppingCarView(AuthApiView,APIView):
 
         return Response(ret)
 
+    def delete(self,request,*args,**kwargs):
+        """
+        删除购物车中的课程
+        :param request:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        response = {"code":1000}
+        try:
+            course_id = str(request.data.get("course_id"))
+            print(course_id,type(course_id))
+            course_dict = CONN.hget(settings.LUFFY_SHOPPING_CAR,request.user.id)
+            if not course_dict:
+                raise Exception("购物车中不存在课程")
+            course_dict = json.loads(course_dict.decode("utf-8"))
+            if course_id not in course_dict:
+                raise Exception("购物车中无此课程")
+            del course_dict[course_id]
+            CONN.hset(settings.LUFFY_SHOPPING_CAR,request.user.id,json.dumps(course_dict))
+            response["msg"] = "删除课程成功"
+        except Exception as e:
+            response["code"] = 1001
+            response["msg"] = "删除课程异常"
+
+        return Response(response)
+
+    def put(self,request,*args,**kwargs):
+        """
+        更新购物车中默认的价格策略
+        :param request:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        response = {"code":1000}
+        try:
+            course_id = str(request.data.get("course_id"))
+            price_policy_id = request.data.get("price_policy_id")
+            course_dict = CONN.hget(settings.LUFFY_SHOPPING_CAR,request.user.id)
+            if not course_dict:
+                raise Exception("购物车清单不存在")
+            course_dict = json.loads(course_dict.decode("utf-8"))
+            if course_id not in course_dict:
+                raise Exception("购物车清单中的商品不存在")
+
+            policy_exist = False
+            for policy in course_dict[course_id]["price_policy_list"]:
+                if policy['id'] == price_policy_id:
+                    policy_exist = True
+                    break
+            if not policy_exist:
+                raise PricePolicyDoesNotExist()
+
+            course_dict[course_id]["default_price_policy"] = price_policy_id
+            CONN.hset(settings.LUFFY_SHOPPING_CAR,request.user.id,json.dumps(course_dict))
+            response["msg"] = "价格策略修改成功"
+
+        except PricePolicyDoesNotExist as e:
+            response["code"] = 1001
+            response["msg"] = "价格策略不存在"
+        except Exception as e:
+            response["code"] = 1002
+            response["msg"] = str(e)
+
+        return Response(response)
 
 
 
