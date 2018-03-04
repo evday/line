@@ -432,6 +432,10 @@ class Article(models.Model):
     def __str__(self):
         return "%s-%s" % (self.source, self.title)
 
+    class Meta:
+        verbose_name = "文章资讯"
+        verbose_name_plural = verbose_name
+
 
 class Collection(models.Model):
     """收藏"""
@@ -444,6 +448,8 @@ class Collection(models.Model):
 
     class Meta:
         unique_together = ('content_type', 'object_id', 'account')
+        verbose_name = "收藏表"
+        verbose_name_plural = verbose_name
 
 
 # 深科技评论和视频评论
@@ -463,6 +469,9 @@ class Comment(models.Model):
     def __str__(self):
         return self.content
 
+    class Meta:
+        verbose_name = "评论表"
+        verbose_name_plural = verbose_name
 
 # ######################## 购买课程相关 ########################
 
@@ -520,6 +529,10 @@ class DegreeRegistrationForm(models.Model):
     def __str__(self):
         return "%s" % self.enrolled_degree
 
+
+    class Meta:
+        verbose_name = "学位课报名表"
+        verbose_name_plural = verbose_name
 
 class EnrolledDegreeCourse(models.Model):
     """已报名的学位课程"""
@@ -588,6 +601,10 @@ class Coupon(models.Model):
 
         super(Coupon, self).save(*args, **kwargs)
 
+    class Meta:
+        verbose_name = "优惠券生成规则"
+        verbose_name_plural = verbose_name
+
 
 class CouponRecord(models.Model):
     """优惠券发放、消费纪录"""
@@ -600,6 +617,13 @@ class CouponRecord(models.Model):
     used_time = models.DateTimeField(blank=True, null=True, verbose_name="使用时间")
     order = models.ForeignKey("Order", blank=True, null=True, verbose_name="关联订单")  # 一个订单可以有多个优惠券
 
+    class Meta:
+        verbose_name = "优惠券交易记录表"
+        verbose_name_plural = verbose_name
+
+
+    def __str__(self):
+        return self.coupon.name
 
 class Order(models.Model):
     """订单"""
@@ -618,6 +642,10 @@ class Order(models.Model):
 
     def __str__(self):
         return "%s" % self.order_number
+
+    class Meta:
+        verbose_name = "订单表"
+        verbose_name_plural = verbose_name
 
 
 class OrderDetail(models.Model):
@@ -641,6 +669,8 @@ class OrderDetail(models.Model):
     class Meta:
         # unique_together = ("order", 'course')
         unique_together = ("order", 'content_type', 'object_id')
+        verbose_name = "订单详情"
+        verbose_name_plural = verbose_name
 
 
 class TransactionRecord(models.Model):
@@ -661,6 +691,10 @@ class TransactionRecord(models.Model):
 
     def __str__(self):
         return "%s" % self.transaction_number
+
+    class Meta:
+        verbose_name = "贝里交易记录"
+        verbose_name_plural = verbose_name
 
 
 class Account(models.Model):
@@ -697,6 +731,10 @@ class UserAuthToken(models.Model):
     user = models.OneToOneField(to="Account")
     token = models.CharField(max_length=40)
     created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "用户token表"
+        verbose_name_plural = verbose_name
 
     def save(self, *args, **kwargs):
         import datetime

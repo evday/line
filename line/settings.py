@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'lufei.apps.LufeiConfig',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -79,7 +80,7 @@ WSGI_APPLICATION = 'line.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'luffycity',
+        'NAME': 'luffy',
         'USER':'root',
         'PASSWORD':'123.com',
         'HOST':'120.78.195.143',
@@ -129,6 +130,8 @@ STATIC_URL = '/static/'
 
 
 LUFFY_SHOPPING_CAR = "luffy_shopping_car"
+
+ACCOUNT_COUPON = "account_coupon"
 
 
 REST_FRAMEWORK = {

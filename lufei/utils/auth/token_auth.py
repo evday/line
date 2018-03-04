@@ -1,17 +1,21 @@
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+from rest_framework.authentication import BaseAuthentication
+from rest_framework.authentication import get_authorization_header
 from django.utils.translation import ugettext_lazy as _
 
-from rest_framework.authentication import BaseAuthentication
-from rest_framework import exceptions
-
+from rest_framework import HTTP_HEADER_ENCODING, exceptions
 from lufei.models import UserAuthToken
 
+
 class LuffyTokenAuthentication(BaseAuthentication):
-    keyword = 'token'
+    keyword = 'Token'
 
     def authenticate(self, request):
-
-        # 从get中获取用户传递过来的token
-        token = request.query_parmas.get('token')
+        """
+        Authenticate the request and return a two-tuple of (user, token).
+        """
+        token = request.query_params.get('token')
         if not token:
             raise exceptions.AuthenticationFailed('验证失败')
 
@@ -21,7 +25,6 @@ class LuffyTokenAuthentication(BaseAuthentication):
         try:
             token_obj = UserAuthToken.objects.select_related('user').get(token=token)
         except Exception as e:
-            # _ 代表django的惰性翻译
             raise exceptions.AuthenticationFailed(_('Invalid token.'))
-        return (token_obj.user,token_obj)
 
+        return (token_obj.user, token_obj)
